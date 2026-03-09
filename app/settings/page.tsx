@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function SettingsPage() {
-  const [expenses, setExpenses] = useState<any[]>([]);
   const { theme, toggleTheme } = useTheme();
   const [settings, setSettings] = useState({
     currency: 'USD',
@@ -14,15 +13,6 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-      try {
-        setExpenses(JSON.parse(savedExpenses));
-      } catch (error) {
-        console.error('Error loading expenses from localStorage:', error);
-      }
-    }
-
     const savedSettings = localStorage.getItem('settings');
     if (savedSettings) {
       try {
@@ -47,26 +37,20 @@ export default function SettingsPage() {
     localStorage.setItem('settings', JSON.stringify(newSettings));
   };
 
-  const clearAllData = () => {
-    if (confirm('Are you sure you want to clear all expenses? This action cannot be undone.')) {
-      localStorage.removeItem('expenses');
-      setExpenses([]);
+  const exportData = () => {
+    const savedExpenses = localStorage.getItem('expenses');
+    if (savedExpenses) {
+      const dataStr = JSON.stringify(JSON.parse(savedExpenses), null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `expenses-${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
     }
   };
-
-  const exportData = () => {
-    const dataStr = JSON.stringify(expenses, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `expenses-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  };
-
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,13 +162,13 @@ export default function SettingsPage() {
                   <div className="border-t pt-4">
                     <div className="flex flex-col sm:flex-row gap-4">
                       <button
-                        onClick={clearAllData}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                        onClick={exportData}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                       >
-                        Clear All Data
+                        Export Data
                       </button>
                       <div className="text-sm text-gray-600 flex items-center">
-                        Permanently delete all expense records
+                        Download all expense records as JSON
                       </div>
                     </div>
                   </div>
@@ -195,18 +179,16 @@ export default function SettingsPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">App Information</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Expenses</span>
-                    <span className="font-medium text-gray-900">${totalExpenses.toFixed(2)}</span>
+                    <span className="text-gray-600">Version</span>
+                    <span className="font-medium text-gray-900">1.0.0</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Transactions</span>
-                    <span className="font-medium text-gray-900">{expenses.length}</span>
+                    <span className="text-gray-600">Theme</span>
+                    <span className="font-medium text-gray-900">{theme}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Storage Used</span>
-                    <span className="font-medium text-gray-900">
-                      {(JSON.stringify(expenses).length / 1024).toFixed(2)} KB
-                    </span>
+                    <span className="text-gray-600">Last Updated</span>
+                    <span className="font-medium text-gray-900">{new Date().toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>

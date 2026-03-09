@@ -1,27 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Expense } from '../../components/ExpenseForm';
 import { useCurrency } from '../../contexts/CurrencyContext';
+import { useExpenses } from '../../contexts/ExpenseContext';
 
 export default function AnalyticsPage() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const { convertAmount, getCurrencySymbol } = useCurrency();
+  const { expenses, totalExpenses } = useExpenses();
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const convertedTotal = convertAmount(totalExpenses);
-
-  useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-      try {
-        setExpenses(JSON.parse(savedExpenses));
-      } catch (error) {
-        console.error('Error loading expenses from localStorage:', error);
-      }
-    }
-  }, []);
 
   const getCategoryStats = () => {
     const stats = expenses.reduce((acc, expense) => {

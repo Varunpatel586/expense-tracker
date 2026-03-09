@@ -1,32 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Expense } from '../../components/ExpenseForm';
 import ExpenseList from '../../components/ExpenseList';
 import { useCurrency } from '../../contexts/CurrencyContext';
+import { useExpenses } from '../../contexts/ExpenseContext';
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const { convertAmount, getCurrencySymbol, currency } = useCurrency();
+  const { expenses, deleteExpense, totalExpenses } = useExpenses();
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const convertedTotal = convertAmount(totalExpenses);
-
-  useEffect(() => {
-    const savedExpenses = localStorage.getItem('expenses');
-    if (savedExpenses) {
-      try {
-        setExpenses(JSON.parse(savedExpenses));
-      } catch (error) {
-        console.error('Error loading expenses from localStorage:', error);
-      }
-    }
-  }, []);
-
-  const handleDeleteExpense = (id: string) => {
-    setExpenses(expenses.filter(expense => expense.id !== id));
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,7 +77,7 @@ export default function ExpensesPage() {
                 <div className="lg:col-span-2">
                   <ExpenseList
                     expenses={expenses}
-                    onDeleteExpense={handleDeleteExpense}
+                    onDeleteExpense={deleteExpense}
                   />
                 </div>
                 <div>

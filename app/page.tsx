@@ -1,65 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ExpenseForm, { Expense } from '../components/ExpenseForm';
 import ExpenseList from '../components/ExpenseList';
 import SummaryPanel from '../components/SummaryPanel';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { useExpenses } from '../contexts/ExpenseContext';
 
 export default function Home() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const { currency, setCurrency, convertAmount, convertToUSD } = useCurrency();
+  const { expenses, addExpense, deleteExpense, totalExpenses } = useExpenses();
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const convertedTotal = convertAmount(totalExpenses);
-
-  useEffect(() => {
-    // Load expenses from localStorage on mount
-    const loadExpenses = () => {
-      try {
-        const savedExpenses = localStorage.getItem('expenses');
-        console.log('Loading expenses from localStorage:', savedExpenses);
-        if (savedExpenses) {
-          const parsedExpenses = JSON.parse(savedExpenses);
-          console.log('Parsed expenses:', parsedExpenses);
-          setExpenses(parsedExpenses);
-        }
-      } catch (error) {
-        console.error('Error loading expenses from localStorage:', error);
-      }
-    };
-
-    loadExpenses();
-
-    // Listen for storage changes (in case another tab modifies the data)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'expenses') {
-        loadExpenses();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
 
   const handleAddExpense = (expense: Omit<Expense, 'id'>) => {
     // Convert amount to USD for storage
     const amountInUSD = convertToUSD(expense.amount);
-    const newExpense: Expense = {
+    addExpense({
       ...expense,
-      amount: amountInUSD,
-      id: Date.now().toString()
-    };
-    setExpenses([...expenses, newExpense]);
+      amount: amountInUSD
+    });
   };
 
   const handleDeleteExpense = (id: string) => {
-    setExpenses(expenses.filter(expense => expense.id !== id));
+    deleteExpense(id);
   };
 
   return (
